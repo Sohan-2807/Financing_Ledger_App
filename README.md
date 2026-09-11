@@ -1,4 +1,4 @@
-# 🏦 Erramala Finance
+# 🏦 Finance Pro
 
 > A production-ready, offline-first mobile application built for micro-lenders and collection agents to digitize daily operations, manage loans, and eliminate paper ledgers.
 
@@ -6,7 +6,7 @@
 
 ## 📌 Overview
 
-**Erramala Finance** addresses the operational challenges faced by small financial businesses, independent lenders, and field collection agents. Managing daily and weekly collection schedules, calculating overdue interest, and migrating legacy paper records often lead to manual accounting errors. 
+**Finance Pro** addresses the operational challenges faced by small financial businesses, independent lenders, and field collection agents. Managing daily and weekly collection schedules, calculating overdue interest, and migrating legacy paper records often lead to manual accounting errors. 
 
 This app provides a complete digital ledger system that runs **100% offline**, ensuring high performance, zero server dependency, and strict data privacy.
 
