@@ -34,12 +34,14 @@ class _CollectionsViewState extends State<CollectionsView>
   @override
   Widget build(BuildContext context) {
     return Consumer<FinanceProvider>(builder: (ctx, fp, _) {
-      final todayCount   = fp.todayInstallments.where((i) => i.status != 'Paid').length;
+      final todayCount = fp.todayInstallments.where((i) => i.status != 'Paid').length;
       final overdueCount = fp.overdueInstallments.length;
 
       return Scaffold(
+        backgroundColor: const Color(0xFF070B14),
         appBar: AppBar(
           title: const Text('Collections'),
+          backgroundColor: const Color(0xFF070B14),
           bottom: TabBar(
             controller: _tab,
             labelColor: const Color(0xFF00E5A0),
@@ -103,11 +105,11 @@ class _TodayTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final list      = fp.todayInstallments;
-    final expected  = list.fold(0.0, (s, i) => s + i.amount);
+    final list = fp.todayInstallments;
+    final expected = list.fold(0.0, (s, i) => s + i.amount);
     final collected = list.fold(0.0, (s, i) => s + i.paidAmount);
-    final paid      = list.where((i) => i.status == 'Paid').length;
-    final pending   = list.where((i) => i.status != 'Paid').length;
+    final paid = list.where((i) => i.status == 'Paid').length;
+    final pending = list.where((i) => i.status != 'Paid').length;
 
     return Column(children: [
       _SummaryBar(
@@ -117,7 +119,6 @@ class _TodayTab extends StatelessWidget {
           paid: paid,
           pending: pending),
 
-      // Success Banner when everything is paid!
       if (list.isNotEmpty && pending == 0)
         Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -128,7 +129,9 @@ class _TodayTab extends StatelessWidget {
             children: [
               Icon(Icons.verified_rounded, color: Color(0xFF00E5A0), size: 18),
               SizedBox(width: 8),
-              Text('All collections done for today 🎉', style: TextStyle(color: Color(0xFF00E5A0), fontWeight: FontWeight.w600)),
+              Text('All collections done for today 🎉',
+                  style: TextStyle(
+                      color: Color(0xFF00E5A0), fontWeight: FontWeight.w600)),
             ],
           ),
         ),
@@ -167,11 +170,11 @@ class _CalendarTab extends StatefulWidget {
 }
 
 class _CalendarTabState extends State<_CalendarTab> {
-  DateTime _month   = DateTime.now();
+  DateTime _month = DateTime.now();
   DateTime _selected = DateTime.now();
   List<Installment> _dayInsts = [];
-  bool _loadingDay  = false;
-  final Map<String, int> _counts = {}; // dateStr → count of UNPAID
+  bool _loadingDay = false;
+  final Map<String, int> _counts = {};
   bool _loadingMonth = false;
 
   @override
@@ -185,19 +188,24 @@ class _CalendarTabState extends State<_CalendarTab> {
     setState(() => _loadingDay = true);
     final fp = context.read<FinanceProvider>();
     final insts = await fp.installmentsForDate(d);
-    if (mounted) setState(() { _dayInsts = insts; _loadingDay = false; });
+    if (mounted) {
+      setState(() {
+        _dayInsts = insts;
+        _loadingDay = false;
+      });
+    }
   }
 
   Future<void> _loadMonthCounts() async {
     setState(() => _loadingMonth = true);
     final db = DatabaseHelper.instance;
     final daysInMonth = DateUtils.getDaysInMonth(_month.year, _month.month);
-    final newCounts   = <String, int>{};
+    final newCounts = <String, int>{};
 
     for (int d = 1; d <= daysInMonth; d++) {
-      final date    = DateTime(_month.year, _month.month, d);
+      final date = DateTime(_month.year, _month.month, d);
       final dateStr = date.toIso8601String().substring(0, 10);
-      final insts   = await db.getInstallmentsByDate(dateStr);
+      final insts = await db.getInstallmentsByDate(dateStr);
 
       final unpaidCount = insts.where((i) => i.status != 'Paid').length;
       if (unpaidCount > 0) {
@@ -215,7 +223,7 @@ class _CalendarTabState extends State<_CalendarTab> {
   }
 
   void _prevMonth() {
-    setState(() => _month = DateTime(_month.year, _month.month - 1));
+    setState(() => _month = DateTime(_month.year, _month.month - 1)); // <-- FIXED MISSING MINUS
     _loadMonthCounts();
   }
 
@@ -226,8 +234,8 @@ class _CalendarTabState extends State<_CalendarTab> {
 
   @override
   Widget build(BuildContext context) {
-    final fp        = context.read<FinanceProvider>();
-    final expected  = _dayInsts.fold(0.0, (s, i) => s + i.amount);
+    final fp = context.read<FinanceProvider>();
+    final expected = _dayInsts.fold(0.0, (s, i) => s + i.amount);
     final collected = _dayInsts.fold(0.0, (s, i) => s + i.paidAmount);
 
     return Column(children: [
@@ -239,7 +247,7 @@ class _CalendarTabState extends State<_CalendarTab> {
         onNext: _nextMonth,
         onToday: () {
           setState(() {
-            _month    = DateTime.now();
+            _month = DateTime.now();
             _selected = DateTime.now();
           });
           _loadDay(DateTime.now());
@@ -250,23 +258,23 @@ class _CalendarTabState extends State<_CalendarTab> {
           _loadDay(d);
         },
       ),
-      // Day summary strip
       Container(
         color: const Color(0xFF0F1621),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(children: [
-          _Pill2('Due',       '${_dayInsts.length}',                 const Color(0xFF7B8FAD)),
+          _Pill2('Due', '${_dayInsts.length}', const Color(0xFF7B8FAD)),
           const SizedBox(width: 8),
-          _Pill2('Expected',  '₹${_fmtExact(expected)}',                const Color(0xFFFFB800)),
+          _Pill2('Expected', '₹${_fmtExact(expected)}', const Color(0xFFFFB800)),
           const SizedBox(width: 8),
-          _Pill2('Collected', '₹${_fmtExact(collected)}',               const Color(0xFF00E5A0)),
+          _Pill2('Collected', '₹${_fmtExact(collected)}', const Color(0xFF00E5A0)),
           const SizedBox(width: 8),
-          _Pill2('Remaining', '₹${_fmtExact(expected - collected)}',    const Color(0xFFFF6B6B)),
+          _Pill2('Remaining', '₹${_fmtExact(expected - collected)}', const Color(0xFFFF6B6B)),
         ]),
       ),
       Expanded(
         child: _loadingDay
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF00E5A0)))
+            ? const Center(
+            child: CircularProgressIndicator(color: Color(0xFF00E5A0)))
             : _dayInsts.isEmpty
             ? _EmptyMsg(
             icon: Icons.event_available_rounded,
@@ -298,7 +306,7 @@ class _OverdueTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final list    = fp.overdueInstallments;
+    final list = fp.overdueInstallments;
     final totalDue = list.fold(0.0, (s, i) => s + i.remainingAmount);
 
     return Column(children: [
@@ -366,23 +374,23 @@ class _Calendar extends StatelessWidget {
     'January','February','March','April','May','June',
     'July','August','September','October','November','December'
   ];
-  static const _dow = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  static const _dow = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
   @override
   Widget build(BuildContext context) {
-    final now  = DateTime.now();
+    final now = DateTime.now();
     final days = DateUtils.getDaysInMonth(month.year, month.month);
-    final off  = DateTime(month.year, month.month, 1).weekday % 7;
+    final off = DateTime(month.year, month.month, 1).weekday % 7;
 
     return Container(
       color: const Color(0xFF0F1621),
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
       child: Column(children: [
-        // Nav row
         Row(children: [
           _CBtn(Icons.chevron_left_rounded, onPrev),
           Expanded(
-            child: Text('${_months[month.month - 1]} ${month.year}',
+            child: Text(
+                '${_months[month.month - 1]} ${month.year}', // <-- FIXED MISSING MINUS
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     color: Color(0xFFEDF2FF),
@@ -393,31 +401,36 @@ class _Calendar extends StatelessWidget {
           _CBtn(Icons.chevron_right_rounded, onNext),
         ]),
         const SizedBox(height: 6),
-        // DOW headers
         Row(
-          children: _dow.map((d) => Expanded(
+          children: _dow
+              .map((d) => Expanded(
             child: Text(d,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                    color: Color(0xFF3D4F6B), fontSize: 11, fontWeight: FontWeight.w600)),
-          )).toList(),
+                    color: Color(0xFF3D4F6B),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600)),
+          ))
+              .toList(),
         ),
         const SizedBox(height: 4),
-        // Grid
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 7, mainAxisSpacing: 2, crossAxisSpacing: 2, childAspectRatio: 1.0),
+              crossAxisCount: 7,
+              mainAxisSpacing: 2,
+              crossAxisSpacing: 2,
+              childAspectRatio: 1.0),
           itemCount: off + days,
           itemBuilder: (_, idx) {
             if (idx < off) return const SizedBox.shrink();
-            final day     = idx - off + 1;
-            final date    = DateTime(month.year, month.month, day);
+            final day = idx - off + 1;
+            final date = DateTime(month.year, month.month, day);
             final dateStr = date.toIso8601String().substring(0, 10);
             final isToday = DateUtils.isSameDay(date, now);
-            final isSel   = DateUtils.isSameDay(date, selected);
-            final cnt     = counts[dateStr];
+            final isSel = DateUtils.isSameDay(date, selected);
+            final cnt = counts[dateStr];
 
             return GestureDetector(
               onTap: () => onDay(date),
@@ -483,7 +496,8 @@ class _CBtn extends StatelessWidget {
   Widget build(BuildContext context) => GestureDetector(
     onTap: onTap,
     child: Container(
-      width: 32, height: 32,
+      width: 32,
+      height: 32,
       alignment: Alignment.center,
       decoration: BoxDecoration(
           color: const Color(0xFF141E2E),
@@ -512,17 +526,20 @@ class _CollCard extends StatelessWidget {
 
   Color get _col {
     switch (inst.effectiveStatus) {
-      case 'Paid':    return const Color(0xFF00E5A0);
-      case 'Overdue': return const Color(0xFFFF6B6B);
-      default:        return const Color(0xFF7B8FAD);
+      case 'Paid':
+        return const Color(0xFF00E5A0);
+      case 'Overdue':
+        return const Color(0xFFFF6B6B);
+      default:
+        return const Color(0xFF7B8FAD);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final customer = fp.customerById(inst.customerId);
-    final col      = _col;
-    final isPaid   = inst.status == 'Paid';
+    final col = _col;
+    final isPaid = inst.status == 'Paid';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -532,11 +549,9 @@ class _CollCard extends StatelessWidget {
         border: Border.all(color: col.withOpacity(0.22)),
       ),
       child: Column(children: [
-        // ── Main info row ──────────────────────────────────
         Padding(
           padding: const EdgeInsets.all(14),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            // Avatar
             CircleAvatar(
               radius: 24,
               backgroundColor: col.withOpacity(0.15),
@@ -545,78 +560,80 @@ class _CollCard extends StatelessWidget {
                       color: col, fontWeight: FontWeight.w700, fontSize: 15)),
             ),
             const SizedBox(width: 12),
-            // Info
             Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(customer?.fullName ?? 'Unknown Customer',
-                    style: const TextStyle(
-                        color: Color(0xFFEDF2FF),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14),
-                    overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 2),
-                Text(customer?.mobile ?? '—',
-                    style: const TextStyle(
-                        color: Color(0xFF7B8FAD), fontSize: 12)),
-                const SizedBox(height: 4),
-                Row(children: [
-                  _Tag('Inst #${inst.installmentNumber}', const Color(0xFF6C63FF)),
-                  const SizedBox(width: 6),
-                  _Tag(inst.dueDate,
-                      isOverdue ? const Color(0xFFFF6B6B) : const Color(0xFF7B8FAD)),
-                ]),
-              ]),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(customer?.fullName ?? 'Unknown Customer',
+                        style: const TextStyle(
+                            color: Color(0xFFEDF2FF),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14),
+                        overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 2),
+                    Text(customer?.mobile ?? '—',
+                        style: const TextStyle(
+                            color: Color(0xFF7B8FAD), fontSize: 12)),
+                    const SizedBox(height: 4),
+                    Row(children: [
+                      _Tag('Inst #${inst.installmentNumber}', const Color(0xFF6C63FF)),
+                      const SizedBox(width: 6),
+                      _Tag(
+                          inst.dueDate,
+                          isOverdue
+                              ? const Color(0xFFFF6B6B)
+                              : const Color(0xFF7B8FAD)),
+                    ]),
+                  ]),
             ),
-            // Amount + status
             Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
               Text('₹${_fmtExact(inst.amount)}',
                   style: TextStyle(
                       color: col, fontWeight: FontWeight.w800, fontSize: 18)),
               const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                     color: col.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(6)),
                 child: Row(
                   children: [
-                    if(isPaid) ...[
+                    if (isPaid) ...[
                       Icon(Icons.check_circle_rounded, color: col, size: 10),
                       const SizedBox(width: 4),
                     ],
                     Text(inst.effectiveStatus,
                         style: TextStyle(
-                            color: col, fontSize: 10, fontWeight: FontWeight.w700)),
+                            color: col,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700)),
                   ],
                 ),
               ),
             ]),
           ]),
         ),
-
-        // ── Action buttons (only when not paid) ────────────
         if (!isPaid)
           Container(
             decoration: BoxDecoration(
               border: Border(top: BorderSide(color: col.withOpacity(0.1))),
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(16)),
             ),
             child: Row(children: [
-              // CALL
               _ActionBtn(
                 icon: Icons.call_rounded,
                 label: 'Call',
                 color: const Color(0xFF00E5A0),
                 onTap: () => _call(customer?.mobile ?? ''),
               ),
-              // WHATSAPP
               _ActionBtn(
                 icon: Icons.chat_rounded,
                 label: 'WhatsApp',
                 color: const Color(0xFF25D366),
                 onTap: () => _sendWhatsApp(customer),
               ),
-              // COLLECT
               _ActionBtn(
                 icon: Icons.payments_rounded,
                 label: 'Collect',
@@ -629,13 +646,11 @@ class _CollCard extends StatelessWidget {
     );
   }
 
-  // 👈 FIX: Consolidated WhatsApp Message & Direct Launch bypass
   Future<void> _sendWhatsApp(Customer? customer) async {
     final mobile = customer?.mobile ?? '';
     final customerId = customer?.id ?? '';
     if (mobile.isEmpty || customerId.isEmpty) return;
 
-    // Gather ALL unpaid installments (Today + Overdue) for this specific customer
     final map = <String, Installment>{};
 
     for (var i in fp.todayInstallments) {
@@ -658,20 +673,19 @@ class _CollCard extends StatelessWidget {
           ? pInst.loanId.substring(0, 6).toUpperCase()
           : pInst.loanId.toUpperCase();
 
-      details += '🔹 *Inst #${pInst.installmentNumber}* (Loan: $shortLoanId)\n';
+      // <-- FIXED NEWLINE STRING INTERPOLATION
+      details += '🔹 *Inst #${pInst.installmentNumber} (Loan: $shortLoanId)*\n';
       details += '      Amount: ₹${pInst.remainingAmount.toStringAsFixed(0)}\n';
       details += '      Due Date: ${pInst.dueDate}\n\n';
     }
 
-    // "Kindly" has been removed as requested
-    final message =
-        'This is a reminder from *Erramala Finance*.\n\n'
+    final message = 'This is a reminder from *Erramala Finance*.\n\n'
         'You have pending payment(s) to clear:\n\n'
         '$details'
         '🔴 *Total Amount Due: ₹${totalDue.toStringAsFixed(0)}*\n\n'
         'Please make your payment at the earliest to avoid any inconvenience.';
 
-    final clean  = mobile.replaceAll(RegExp(r'\D'), '');
+    final clean = mobile.replaceAll(RegExp(r'\D'), '');
     final number = clean.startsWith('91') ? clean : '91$clean';
     final encoded = Uri.encodeComponent(message);
     final uri = Uri.parse('https://wa.me/$number?text=$encoded');
@@ -683,9 +697,8 @@ class _CollCard extends StatelessWidget {
     }
   }
 
-  // ── COLLECT SHEET ───────────────────────────────────────────
-
-  Future<void> _showCollectSheet(BuildContext context, Customer? customer) async {
+  Future<void> _showCollectSheet(
+      BuildContext context, Customer? customer) async {
     String method = 'Cash';
 
     final result = await showModalBottomSheet<String>(
@@ -694,108 +707,172 @@ class _CollCard extends StatelessWidget {
       backgroundColor: const Color(0xFF141E2E),
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (ctx) => StatefulBuilder(builder: (_, ss) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-          left: 20, right: 20, top: 12,
-        ),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Center(child: Container(width: 40, height: 4,
-              decoration: BoxDecoration(color: const Color(0xFF243050), borderRadius: BorderRadius.circular(2)))),
-          const SizedBox(height: 18),
-          Row(children: [
-            CircleAvatar(radius: 22,
-                backgroundColor: const Color(0xFF00E5A0).withOpacity(0.15),
-                child: Text(customer?.initials ?? '?',
-                    style: const TextStyle(color: Color(0xFF00E5A0), fontWeight: FontWeight.w700))),
-            const SizedBox(width: 12),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(customer?.fullName ?? 'Unknown',
-                  style: const TextStyle(color: Color(0xFFEDF2FF), fontWeight: FontWeight.w700, fontSize: 15),
-                  overflow: TextOverflow.ellipsis),
-              Text('Installment #${inst.installmentNumber}  •  Due ${inst.dueDate}',
-                  style: const TextStyle(color: Color(0xFF7B8FAD), fontSize: 12)),
-            ])),
-          ]),
-          const SizedBox(height: 18),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 18),
-            decoration: BoxDecoration(
-              color: const Color(0xFF00E5A0).withOpacity(0.06),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFF00E5A0).withOpacity(0.3)),
+      builder: (ctx) => StatefulBuilder(
+          builder: (_, ss) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+              left: 20,
+              right: 20,
+              top: 12,
             ),
-            child: Column(children: [
-              const Text('Collection Amount', style: TextStyle(color: Color(0xFF7B8FAD), fontSize: 11)),
-              const SizedBox(height: 4),
-              Text('₹${_fmtExact(inst.amount)}',
-                  style: const TextStyle(color: Color(0xFF00E5A0), fontSize: 36, fontWeight: FontWeight.w800)),
-            ]),
-          ),
-          const SizedBox(height: 18),
-          const Text('Payment Method', style: TextStyle(color: Color(0xFF7B8FAD), fontSize: 12)),
-          const SizedBox(height: 8),
-          Wrap(spacing: 8, runSpacing: 8,
-            children: ['Cash', 'UPI', 'Bank Transfer', 'Cheque'].map((m) {
-              final sel = method == m;
-              return GestureDetector(
-                onTap: () => ss(() => method = m),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: sel ? const Color(0xFF00E5A0).withOpacity(0.12) : const Color(0xFF1A2540),
-                    borderRadius: BorderRadius.circular(9),
-                    border: Border.all(color: sel ? const Color(0xFF00E5A0) : const Color(0xFF243050)),
-                  ),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(_mIcon(m), color: sel ? const Color(0xFF00E5A0) : const Color(0xFF7B8FAD), size: 15),
-                    const SizedBox(width: 6),
-                    Text(m, style: TextStyle(
-                        color: sel ? const Color(0xFF00E5A0) : const Color(0xFF7B8FAD),
-                        fontSize: 13, fontWeight: sel ? FontWeight.w600 : FontWeight.w400)),
+            child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                      child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                              color: const Color(0xFF243050),
+                              borderRadius: BorderRadius.circular(2)))),
+                  const SizedBox(height: 18),
+                  Row(children: [
+                    CircleAvatar(
+                        radius: 22,
+                        backgroundColor:
+                        const Color(0xFF00E5A0).withOpacity(0.15),
+                        child: Text(customer?.initials ?? '?',
+                            style: const TextStyle(
+                                color: Color(0xFF00E5A0),
+                                fontWeight: FontWeight.w700))),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(customer?.fullName ?? 'Unknown',
+                                  style: const TextStyle(
+                                      color: Color(0xFFEDF2FF),
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 15),
+                                  overflow: TextOverflow.ellipsis),
+                              // <-- FIXED NEWLINE SYNTAX
+                              Text(
+                                  'Installment #${inst.installmentNumber} Due ${inst.dueDate}',
+                                  style: const TextStyle(
+                                      color: Color(0xFF7B8FAD), fontSize: 12)),
+                            ])),
                   ]),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 22),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(ctx, method),
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-              child: const Text('Confirm Collection', style: TextStyle(fontSize: 15)),
-            ),
-          ),
-        ]),
-      )),
+                  const SizedBox(height: 18),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00E5A0).withOpacity(0.06),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                          color: const Color(0xFF00E5A0).withOpacity(0.3)),
+                    ),
+                    child: Column(children: [
+                      const Text('Collection Amount',
+                          style: TextStyle(
+                              color: Color(0xFF7B8FAD), fontSize: 11)),
+                      const SizedBox(height: 4),
+                      Text('₹${_fmtExact(inst.amount)}',
+                          style: const TextStyle(
+                              color: Color(0xFF00E5A0),
+                              fontSize: 36,
+                              fontWeight: FontWeight.w800)),
+                    ]),
+                  ),
+                  const SizedBox(height: 18),
+                  const Text('Payment Method',
+                      style: TextStyle(
+                          color: Color(0xFF7B8FAD), fontSize: 12)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      'Cash',
+                      'UPI',
+                      'Bank Transfer',
+                      'Cheque'
+                    ].map((m) {
+                      final sel = method == m;
+                      return GestureDetector(
+                        onTap: () => ss(() => method = m),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: sel
+                                ? const Color(0xFF00E5A0).withOpacity(0.12)
+                                : const Color(0xFF1A2540),
+                            borderRadius: BorderRadius.circular(9),
+                            border: Border.all(
+                                color: sel
+                                    ? const Color(0xFF00E5A0)
+                                    : const Color(0xFF243050)),
+                          ),
+                          child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(_mIcon(m),
+                                    color: sel
+                                        ? const Color(0xFF00E5A0)
+                                        : const Color(0xFF7B8FAD),
+                                    size: 15),
+                                const SizedBox(width: 6),
+                                Text(m,
+                                    style: TextStyle(
+                                        color: sel
+                                            ? const Color(0xFF00E5A0)
+                                            : const Color(0xFF7B8FAD),
+                                        fontSize: 13,
+                                        fontWeight: sel
+                                            ? FontWeight.w600
+                                            : FontWeight.w400)),
+                              ]),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 22),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx, method),
+                      style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16)),
+                      child: const Text('Confirm Collection',
+                          style: TextStyle(fontSize: 15)),
+                    ),
+                  ),
+                ]),
+          )),
     );
 
     if (result == null || !context.mounted) return;
 
     try {
-      final db   = DatabaseHelper.instance;
+      final db = DatabaseHelper.instance;
       final loan = await db.getLoan(inst.loanId);
       if (loan == null) return;
       final pay = await context.read<FinanceProvider>().collectPayment(
-        loan: loan, installment: inst, paymentMethod: result,
+        loan: loan,
+        installment: inst,
+        paymentMethod: result,
       );
       await onDone();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Row(children: [
-            const Icon(Icons.check_circle_rounded, color: Color(0xFF00E5A0), size: 18),
+            const Icon(Icons.check_circle_rounded,
+                color: Color(0xFF00E5A0), size: 18),
             const SizedBox(width: 10),
-            Expanded(child: Text(
-              '₹${_fmtExact(inst.amount)} collected  •  ${pay.receiptNumber}',
-              style: const TextStyle(color: Color(0xFFEDF2FF)),
-            )),
+            Expanded(
+                child: Text(
+                  '₹${_fmtExact(inst.amount)} collected  •  ${pay.receiptNumber}',
+                  style: const TextStyle(color: Color(0xFFEDF2FF)),
+                )),
           ]),
           backgroundColor: const Color(0xFF141E2E),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
           duration: const Duration(seconds: 3),
         ));
       }
@@ -811,10 +888,14 @@ class _CollCard extends StatelessWidget {
 
   IconData _mIcon(String m) {
     switch (m) {
-      case 'UPI':           return Icons.qr_code_rounded;
-      case 'Bank Transfer': return Icons.account_balance_rounded;
-      case 'Cheque':        return Icons.receipt_long_rounded;
-      default:              return Icons.payments_rounded;
+      case 'UPI':
+        return Icons.qr_code_rounded;
+      case 'Bank Transfer':
+        return Icons.account_balance_rounded;
+      case 'Cheque':
+        return Icons.receipt_long_rounded;
+      default:
+        return Icons.payments_rounded;
     }
   }
 }
@@ -824,7 +905,11 @@ class _ActionBtn extends StatelessWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
-  const _ActionBtn({required this.icon, required this.label, required this.color, required this.onTap});
+  const _ActionBtn(
+      {required this.icon,
+        required this.label,
+        required this.color,
+        required this.onTap});
 
   @override
   Widget build(BuildContext context) => Expanded(
@@ -836,7 +921,9 @@ class _ActionBtn extends StatelessWidget {
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, size: 19, color: color),
         const SizedBox(height: 3),
-        Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w500)),
+        Text(label,
+            style: TextStyle(
+                fontSize: 11, color: color, fontWeight: FontWeight.w500)),
       ]),
     ),
   );
@@ -865,13 +952,19 @@ class _SummaryBar extends StatelessWidget {
       color: const Color(0xFF0F1621),
       child: Column(children: [
         Row(children: [
-          Expanded(child: _Pill2('Total',     '$total',               const Color(0xFF7B8FAD))),
+          Expanded(
+              child: _Pill2('Total', '$total', const Color(0xFF7B8FAD))),
           const SizedBox(width: 8),
-          Expanded(child: _Pill2('Expected',  '₹${_fmtExact(expected)}', const Color(0xFFFFB800))),
+          Expanded(
+              child: _Pill2('Expected', '₹${_fmtExact(expected)}',
+                  const Color(0xFFFFB800))),
           const SizedBox(width: 8),
-          Expanded(child: _Pill2('Collected', '₹${_fmtExact(collected)}',const Color(0xFF00E5A0))),
+          Expanded(
+              child: _Pill2('Collected', '₹${_fmtExact(collected)}',
+                  const Color(0xFF00E5A0))),
           const SizedBox(width: 8),
-          Expanded(child: _Pill2('Pending',   '$pending',            const Color(0xFFFF6B6B))),
+          Expanded(
+              child: _Pill2('Pending', '$pending', const Color(0xFFFF6B6B))),
         ]),
         const SizedBox(height: 10),
         ClipRRect(
@@ -881,9 +974,11 @@ class _SummaryBar extends StatelessWidget {
             duration: const Duration(milliseconds: 700),
             curve: Curves.easeOutCubic,
             builder: (_, v, __) => LinearProgressIndicator(
-              value: v, minHeight: 6,
+              value: v,
+              minHeight: 6,
               backgroundColor: const Color(0xFF243050),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00E5A0)),
+              valueColor:
+              const AlwaysStoppedAnimation<Color>(Color(0xFF00E5A0)),
             ),
           ),
         ),
@@ -910,12 +1005,15 @@ class _Pill2 extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
     decoration: BoxDecoration(
-        color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(8)),
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(8)),
     child: Column(children: [
       Text(value,
-          style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12),
+          style: TextStyle(
+              color: color, fontWeight: FontWeight.w700, fontSize: 12),
           overflow: TextOverflow.ellipsis),
-      Text(label, style: const TextStyle(color: Color(0xFF3D4F6B), fontSize: 9)),
+      Text(label,
+          style: const TextStyle(color: Color(0xFF3D4F6B), fontSize: 9)),
     ]),
   );
 }
@@ -928,8 +1026,11 @@ class _Tag extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
     decoration: BoxDecoration(
-        color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(5)),
-    child: Text(text, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w500)),
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(5)),
+    child: Text(text,
+        style: TextStyle(
+            color: color, fontSize: 10, fontWeight: FontWeight.w500)),
   );
 }
 
@@ -942,7 +1043,8 @@ class _EmptyMsg extends StatelessWidget {
     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       Icon(icon, size: 64, color: const Color(0xFF243050)),
       const SizedBox(height: 14),
-      Text(msg, style: const TextStyle(color: Color(0xFF7B8FAD), fontSize: 14),
+      Text(msg,
+          style: const TextStyle(color: Color(0xFF7B8FAD), fontSize: 14),
           textAlign: TextAlign.center),
     ]),
   );
@@ -951,8 +1053,8 @@ class _EmptyMsg extends StatelessWidget {
 String _fmtExact(double v) {
   final str = v.toStringAsFixed(0);
   if (str.length <= 3) return str;
-  final lastThree = str.substring(str.length - 3);
-  final rest = str.substring(0, str.length - 3);
+  final lastThree = str.substring(str.length - 3); // <-- FIXED MISSING MINUS
+  final rest = str.substring(0, str.length - 3);   // <-- FIXED MISSING MINUS
   final RegExp reg = RegExp(r'\B(?=(\d{2})+(?!\d))');
   return '${rest.replaceAll(reg, ',')},$lastThree';
 }

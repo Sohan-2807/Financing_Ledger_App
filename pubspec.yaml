@@ -35,6 +35,9 @@ dependencies:
   pdf: ^3.10.8
   printing: ^5.11.1
 
+  # Google Fonts for UI styling
+  google_fonts: ^6.2.1
+
 dev_dependencies:
   flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.8
@@ -44,6 +47,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  # Only your images are here now!
   assets:
     - assets/logo.png
     - assets/icon/app_logo.png

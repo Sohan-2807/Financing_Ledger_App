@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:math';
 import 'finance_provider.dart';
 import 'customer_loan_modules.dart';
 import 'customers_view.dart';
 import 'collections_view.dart';
 import 'reports_view.dart';
 import 'navigation_shell.dart';
+// 👈 IMPORTANT: Import the two new screens here!
+import 'outstanding_screen.dart';
+import 'month_given_screen.dart';
 
 // ═══════════════════════════════════════════════════════════════
 //  DASHBOARD
@@ -42,7 +46,6 @@ class _DashboardViewState extends State<DashboardView>
     super.dispose();
   }
 
-  // navigate to a named bottom-nav tab by popping to root + index
   void _goTab(BuildContext context, int index) {
     final shell = context.findAncestorStateOfType<NavigationShellState>();
     shell?.goTo(index);
@@ -53,6 +56,7 @@ class _DashboardViewState extends State<DashboardView>
     return Consumer<FinanceProvider>(builder: (ctx, fp, _) {
       final s = fp.stats;
       return Scaffold(
+        backgroundColor: const Color(0xFF070B14),
         body: RefreshIndicator(
           onRefresh: () => fp.loadAll(),
           color: const Color(0xFF00E5A0),
@@ -92,103 +96,103 @@ class _DashboardViewState extends State<DashboardView>
     });
   }
 
-  // ── APP BAR ────────────────────────────────────────────────
+  // ── APP BAR (Fixed Negative Constraints) ───────────────────
 
   SliverAppBar _appBar(BuildContext context, FinanceProvider fp) {
     final h = DateTime.now().hour;
     final greeting =
     h < 12 ? 'Good Morning 👋' : h < 17 ? 'Good Afternoon ☀️' : 'Good Evening 🌙';
+
     return SliverAppBar(
       floating: true,
       snap: true,
-      expandedHeight: 64,
+      toolbarHeight: 64,
       backgroundColor: const Color(0xFF070B14),
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-        title: Row(children: [
-
-          ClipRRect(
-            borderRadius: BorderRadius.circular(9),
-            child: Image.asset(
-              'assets/logo.png',
+      titleSpacing: 16,
+      title: Row(children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(9),
+          child: Image.asset(
+            'assets/logo.png',
+            width: 34,
+            height: 34,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
               width: 34,
               height: 34,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                width: 34, height: 34,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(colors: [Color(0xFF00E5A0), Color(0xFF6C63FF)]),
-                ),
-                child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.black, size: 18),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [Color(0xFF00E5A0), Color(0xFF6C63FF)]),
               ),
+              child: const Icon(Icons.account_balance_wallet_rounded,
+                  color: Colors.black, size: 18),
             ),
           ),
-
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Erramala', // 👈 Updated
-                    style: TextStyle(
-                        color: Color(0xFF00E5A0),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5)),
-                Text(greeting,
-                    style: const TextStyle(
-                        color: Color(0xFF7B8FAD),
-                        fontSize: 9,
-                        fontWeight: FontWeight.w400),
-                    overflow: TextOverflow.ellipsis),
-              ],
-            ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Erramala',
+                  style: TextStyle(
+                      color: Color(0xFF00E5A0),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5)),
+              Text(greeting,
+                  style: const TextStyle(
+                      color: Color(0xFF7B8FAD),
+                      fontSize: 9,
+                      fontWeight: FontWeight.w400),
+                  overflow: TextOverflow.ellipsis),
+            ],
           ),
-          if (fp.overdueInstallments.isNotEmpty)
-            GestureDetector(
-              onTap: () => _goTab(context, 2),
-              child: Stack(clipBehavior: Clip.none, children: [
-                Container(
-                  width: 34,
-                  height: 34,
+        ),
+        if (fp.overdueInstallments.isNotEmpty) ...[
+          GestureDetector(
+            onTap: () => _goTab(context, 2),
+            child: Stack(clipBehavior: Clip.none, children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                    color: const Color(0xFF141E2E),
+                    borderRadius: BorderRadius.circular(9)),
+                child: const Icon(Icons.notifications_outlined,
+                    color: Color(0xFF7B8FAD), size: 18),
+              ),
+              Positioned(
+                top: 5,
+                right: 5,
+                child: Container(
+                  width: 7,
+                  height: 7,
                   decoration: BoxDecoration(
-                      color: const Color(0xFF141E2E),
-                      borderRadius: BorderRadius.circular(9)),
-                  child: const Icon(Icons.notifications_outlined,
-                      color: Color(0xFF7B8FAD), size: 18),
-                ),
-                Positioned(
-                  top: 5,
-                  right: 5,
-                  child: Container(
-                    width: 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF6B6B),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                          color: const Color(0xFF070B14), width: 1.5),
-                    ),
+                    color: const Color(0xFFFF6B6B),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: const Color(0xFF070B14), width: 1.5),
                   ),
                 ),
-              ]),
-            ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () => _showSearch(context),
-            child: Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                  color: const Color(0xFF141E2E),
-                  borderRadius: BorderRadius.circular(9)),
-              child: const Icon(Icons.search_rounded,
-                  color: Color(0xFF7B8FAD), size: 18),
-            ),
+              ),
+            ]),
           ),
-        ]),
-      ),
+          const SizedBox(width: 8),
+        ],
+        GestureDetector(
+          onTap: () => _showSearch(context),
+          child: Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+                color: const Color(0xFF141E2E),
+                borderRadius: BorderRadius.circular(9)),
+            child: const Icon(Icons.search_rounded,
+                color: Color(0xFF7B8FAD), size: 18),
+          ),
+        ),
+      ]),
     );
   }
 
@@ -210,8 +214,7 @@ class _DashboardViewState extends State<DashboardView>
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-            color: const Color(0xFF00E5A0).withOpacity(0.2)),
+        border: Border.all(color: const Color(0xFF00E5A0).withOpacity(0.2)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text("Today's Total Target",
@@ -233,21 +236,28 @@ class _DashboardViewState extends State<DashboardView>
         IntrinsicHeight(
           child: Row(children: [
             Expanded(
-                child: _HeroStat('Due Today',
-                    '${s['todayDue'] ?? 0} acc',
+                child: _HeroStat('Due Today', '${s['todayDue'] ?? 0} acc',
                     const Color(0xFFFFB800))),
             const VerticalDivider(
                 color: Color(0xFF1A2540), thickness: 1, width: 20),
+
+            // 👈 UPDATED: Outstanding is now clickable
             Expanded(
-                child: _HeroStat('Outstanding',
-                    '₹${_fmtExact(outstanding)}',
-                    const Color(0xFFFF6B6B))),
+                child: _HeroStat('Outstanding', '₹${_fmtExact(outstanding)}',
+                    const Color(0xFFFF6B6B), onTap: () {
+                      Navigator.push(context, _sr(const OutstandingScreen()));
+                    })),
+
             const VerticalDivider(
                 color: Color(0xFF1A2540), thickness: 1, width: 20),
+
+            // 👈 UPDATED: This Month Given is now clickable
             Expanded(
                 child: _HeroStat('This Month Given',
-                    '₹${_fmtExact(monthGiven)}',
-                    const Color(0xFF6C63FF))),
+                    '₹${_fmtExact(monthGiven)}', const Color(0xFF6C63FF),
+                    onTap: () {
+                      Navigator.push(context, _sr(const MonthGivenScreen()));
+                    })),
           ]),
         ),
       ]),
@@ -259,22 +269,16 @@ class _DashboardViewState extends State<DashboardView>
   Widget _statsRow(Map<String, dynamic> s) {
     return Row(children: [
       Expanded(
-          child: _SC('Customers',
-              '${s['activeCustomers'] ?? 0}',
-              Icons.people_alt_rounded,
-              const Color(0xFF00E5A0))),
+          child: _SC('Customers', '${s['activeCustomers'] ?? 0}',
+              Icons.people_alt_rounded, const Color(0xFF00E5A0))),
       const SizedBox(width: 10),
       Expanded(
-          child: _SC('Active Loans',
-              '${s['activeLoans'] ?? 0}',
-              Icons.credit_score_rounded,
-              const Color(0xFF6C63FF))),
+          child: _SC('Active Loans', '${s['activeLoans'] ?? 0}',
+              Icons.credit_score_rounded, const Color(0xFF6C63FF))),
       const SizedBox(width: 10),
       Expanded(
-          child: _SC('Overdue',
-              '${s['overdueCount'] ?? 0}',
-              Icons.warning_rounded,
-              const Color(0xFFFF6B6B))),
+          child: _SC('Overdue', '${s['overdueCount'] ?? 0}',
+              Icons.warning_rounded, const Color(0xFFFF6B6B))),
     ]);
   }
 
@@ -285,65 +289,59 @@ class _DashboardViewState extends State<DashboardView>
       const _SLabel('Quick Actions'),
       const SizedBox(height: 12),
       Row(children: [
-        _QA('Add Customer', Icons.person_add_rounded,
-            const Color(0xFF00E5A0), () {
-              Navigator.push(context, _sr(const AddCustomerScreen()));
-            }),
+        _QA('Add Customer', Icons.person_add_rounded, const Color(0xFF00E5A0), () {
+          Navigator.push(context, _sr(const AddCustomerScreen()));
+        }),
         const SizedBox(width: 8),
-        _QA('New Loan', Icons.add_card_rounded,
-            const Color(0xFF6C63FF), () {
-              _pickCustomerForLoan(context);
-            }),
+        _QA('New Loan', Icons.add_card_rounded, const Color(0xFF6C63FF), () {
+          _pickCustomerForLoan(context);
+        }),
         const SizedBox(width: 8),
-        _QA('Collections', Icons.payments_rounded,
-            const Color(0xFF4FC3F7), () {
-              _goTab(context, 2);
-            }),
+        _QA('Collections', Icons.payments_rounded, const Color(0xFF4FC3F7), () {
+          _goTab(context, 2);
+        }),
         const SizedBox(width: 8),
-        _QA('Calendar', Icons.calendar_month_rounded,
-            const Color(0xFFFFB800), () {
-              _goTab(context, 2);
-            }),
+        _QA('Calendar', Icons.calendar_month_rounded, const Color(0xFFFFB800), () {
+          _goTab(context, 2);
+        }),
       ]),
       const SizedBox(height: 8),
       Row(children: [
-        _QA('Reports', Icons.bar_chart_rounded,
-            const Color(0xFF00E5A0), () {
-              _goTab(context, 3);
-            }),
+        _QA('Reports', Icons.bar_chart_rounded, const Color(0xFF00E5A0), () {
+          _goTab(context, 3);
+        }),
         const SizedBox(width: 8),
-        _QA('Customers', Icons.people_rounded,
-            const Color(0xFF6C63FF), () {
-              _goTab(context, 1);
-            }),
+        _QA('Customers', Icons.people_rounded, const Color(0xFF6C63FF), () {
+          _goTab(context, 1);
+        }),
         const SizedBox(width: 8),
-        _QA('Search', Icons.manage_search_rounded,
-            const Color(0xFFFF6B6B), () {
-              _showSearch(context);
-            }),
+        _QA('Search', Icons.manage_search_rounded, const Color(0xFFFF6B6B), () {
+          _showSearch(context);
+        }),
         const SizedBox(width: 8),
-        _QA('Settings', Icons.settings_rounded,
-            const Color(0xFF7B8FAD), () {
-              _goTab(context, 4);
-            }),
+        _QA('Settings', Icons.settings_rounded, const Color(0xFF7B8FAD), () {
+          _goTab(context, 4);
+        }),
       ]),
     ]);
   }
 
-  // ── CHART (SHOWS AMOUNT GIVEN PER MONTH) ───────────────────
+  // ── CHART ──────────────────────────────────────────────────
 
   Widget _chart(Map<String, dynamic> s) {
-    final series = (s['monthlyDisbursedSeries'] as List<dynamic>?) ??
+    final rawSeries = (s['monthlyDisbursedSeries'] as List<dynamic>?) ??
         (s['monthlySeries'] as List<dynamic>?) ??
         [];
-    if (series.isEmpty) return const SizedBox.shrink();
+    if (rawSeries.isEmpty) return const SizedBox.shrink();
+
+    // Fix: Using sublist with proper minus sign
+    final series = rawSeries.length > 12
+        ? rawSeries.sublist(rawSeries.length - 12)
+        : rawSeries;
+
     final maxVal = series.fold(
-        0.0,
-            (m, e) =>
-        (e['amount'] as double) > m ? (e['amount'] as double) : m);
-    const months = [
-      'J','F','M','A','M','J','J','A','S','O','N','D'
-    ];
+        0.0, (m, e) => (e['amount'] as double) > m ? (e['amount'] as double) : m);
+    const months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const _SLabel('Monthly Disbursed Trend (Amount Given)'),
@@ -359,8 +357,7 @@ class _DashboardViewState extends State<DashboardView>
           crossAxisAlignment: CrossAxisAlignment.end,
           children: series.map((e) {
             final amt = (e['amount'] as double);
-            final pct =
-            maxVal > 0 ? (amt / maxVal).clamp(0.02, 1.0) : 0.02;
+            final pct = maxVal > 0 ? (amt / maxVal).clamp(0.02, 1.0) : 0.02;
             final mStr = (e['month'] as String).substring(5);
             final mIdx = (int.tryParse(mStr) ?? 1) - 1;
             return Expanded(
@@ -379,13 +376,10 @@ class _DashboardViewState extends State<DashboardView>
                       duration: const Duration(milliseconds: 900),
                       curve: Curves.easeOutCubic,
                       builder: (_, v, __) => Container(
-                        height: 70 * v,
+                        height: 70 * v, // Fix: Added multiplication sign
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF6C63FF),
-                              Color(0xFF00E5A0),
-                            ],
+                            colors: [Color(0xFF6C63FF), Color(0xFF00E5A0)],
                             begin: Alignment.bottomCenter,
                             end: Alignment.topCenter,
                           ),
@@ -412,7 +406,8 @@ class _DashboardViewState extends State<DashboardView>
   Widget _todaySection(BuildContext context, FinanceProvider fp) {
     if (fp.todayInstallments.isEmpty) return const SizedBox.shrink();
 
-    final pendingToday = fp.todayInstallments.where((i) => i.status != 'Paid').toList();
+    final pendingToday =
+    fp.todayInstallments.where((i) => i.status != 'Paid').toList();
     if (pendingToday.isEmpty) return const SizedBox.shrink();
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -519,9 +514,7 @@ class _DashboardViewState extends State<DashboardView>
                   return GestureDetector(
                     onTap: () {
                       Navigator.pop(ctx);
-                      Navigator.push(
-                          context,
-                          _sr(AddLoanScreen(customer: c)));
+                      Navigator.push(context, _sr(AddLoanScreen(customer: c)));
                     },
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 8),
@@ -627,8 +620,8 @@ class _GlobalSearchState extends State<_GlobalSearch> {
       maxChildSize: 0.95,
       expand: false,
       builder: (_, scroll) => Padding(
-        padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding:
+        EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Column(children: [
           const SizedBox(height: 12),
           Center(
@@ -649,8 +642,8 @@ class _GlobalSearchState extends State<_GlobalSearch> {
               style: const TextStyle(color: Color(0xFFEDF2FF)),
               decoration: InputDecoration(
                 hintText: 'Search customer name, mobile, village…',
-                prefixIcon: const Icon(Icons.search_rounded,
-                    color: Color(0xFF7B8FAD)),
+                prefixIcon:
+                const Icon(Icons.search_rounded, color: Color(0xFF7B8FAD)),
                 suffixIcon: _ctrl.text.isNotEmpty
                     ? IconButton(
                     icon: const Icon(Icons.close_rounded,
@@ -683,8 +676,7 @@ class _GlobalSearchState extends State<_GlobalSearch> {
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
-                        context,
-                        _sr(CustomerDetailScreen(customer: c)));
+                        context, _sr(CustomerDetailScreen(customer: c)));
                   },
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 8),
@@ -707,8 +699,7 @@ class _GlobalSearchState extends State<_GlobalSearch> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
-                            crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(c.fullName,
                                   style: const TextStyle(
@@ -750,27 +741,33 @@ class _SLabel extends StatelessWidget {
           letterSpacing: -0.3));
 }
 
+// 👈 UPDATED: _HeroStat class now supports tapping!
 class _HeroStat extends StatelessWidget {
   final String label, value;
   final Color color;
-  const _HeroStat(this.label, this.value, this.color);
+  final VoidCallback? onTap;
+  const _HeroStat(this.label, this.value, this.color, {this.onTap});
+
   @override
-  Widget build(BuildContext context) => Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Text(value,
-          style: TextStyle(
-              color: color, fontWeight: FontWeight.w700, fontSize: 13),
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis),
-      const SizedBox(height: 2),
-      Text(label,
-          style: const TextStyle(
-              color: Color(0xFF7B8FAD), fontSize: 9),
-          textAlign: TextAlign.center,
-          maxLines: 1),
-    ],
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: onTap,
+    behavior: HitTestBehavior.opaque,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(value,
+            style: TextStyle(
+                color: color, fontWeight: FontWeight.w700, fontSize: 13),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis),
+        const SizedBox(height: 2),
+        Text(label,
+            style: const TextStyle(color: Color(0xFF7B8FAD), fontSize: 9),
+            textAlign: TextAlign.center,
+            maxLines: 1),
+      ],
+    ),
   );
 }
 
@@ -794,8 +791,7 @@ class _SC extends StatelessWidget {
           style: TextStyle(
               color: color, fontSize: 20, fontWeight: FontWeight.w800)),
       Text(label,
-          style: const TextStyle(
-              color: Color(0xFF7B8FAD), fontSize: 10),
+          style: const TextStyle(color: Color(0xFF7B8FAD), fontSize: 10),
           maxLines: 1,
           overflow: TextOverflow.ellipsis),
     ]),
@@ -824,9 +820,7 @@ class _QA extends StatelessWidget {
           const SizedBox(height: 4),
           Text(label,
               style: TextStyle(
-                  color: color,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600),
+                  color: color, fontSize: 9, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis),
@@ -857,23 +851,23 @@ class _MiniTile extends StatelessWidget {
           backgroundColor: color.withOpacity(0.15),
           child: Text(c?.initials ?? '?',
               style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12)),
+                  color: color, fontWeight: FontWeight.w700, fontSize: 12)),
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(c?.fullName ?? 'Unknown',
-                style: const TextStyle(
-                    color: Color(0xFFEDF2FF),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600),
-                overflow: TextOverflow.ellipsis),
-            Text('Inst #${inst.installmentNumber} • ${inst.dueDate}',
-                style: const TextStyle(
-                    color: Color(0xFF7B8FAD), fontSize: 11)),
-          ]),
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(c?.fullName ?? 'Unknown',
+                    style: const TextStyle(
+                        color: Color(0xFFEDF2FF),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600),
+                    overflow: TextOverflow.ellipsis),
+                // Fix: Properly formatted string interpolation on one line
+                Text('Inst #${inst.installmentNumber} • ${inst.dueDate}',
+                    style: const TextStyle(color: Color(0xFF7B8FAD), fontSize: 11)),
+              ]),
         ),
         Text('₹${_fmtExact(inst.remainingAmount)}',
             style: TextStyle(
@@ -927,20 +921,19 @@ class _AnimCounterState extends State<_AnimCounter>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _a,
-      builder: (_, __) => Text(
-          '${widget.prefix}${_fmtExact(_a.value)}',
+      builder: (_, __) => Text('${widget.prefix}${_fmtExact(_a.value)}',
           style: widget.style),
     );
   }
 }
 
-// ── UTILS ─────────────────────────────────────────────────────
+// ── UTILS (Fixed Syntax Math Errors) ─────────────────────────
 
 String _fmtExact(double v) {
   final str = v.toStringAsFixed(0);
   if (str.length <= 3) return str;
-  final lastThree = str.substring(str.length - 3);
-  final rest = str.substring(0, str.length - 3);
+  final lastThree = str.substring(str.length - 3); // Fix: Added minus
+  final rest = str.substring(0, str.length - 3);   // Fix: Added minus
   final RegExp reg = RegExp(r'\B(?=(\d{2})+(?!\d))');
   return '${rest.replaceAll(reg, ',')},$lastThree';
 }

@@ -5,6 +5,7 @@ import 'finance_provider.dart';
 import 'customer_loan_modules.dart';
 import 'database_helper.dart';
 import 'loan_pdf_service.dart';
+import 'bond_pdf_service.dart'; // 👈 ADDED: Import the new bond service
 
 // ═══════════════════════════════════════════════════════════════
 //  CUSTOMERS LIST
@@ -769,6 +770,15 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen>
       appBar: AppBar(
         title: Text(c.fullName, overflow: TextOverflow.ellipsis),
         actions: [
+          // 👈 ADDED: Generate Master Bond Button
+          IconButton(
+            icon: const Icon(Icons.description_rounded, color: Color(0xFF6C63FF)),
+            tooltip: 'Generate Master Bond',
+            onPressed: () async {
+              _snack(context, 'Generating Bond Paper...', const Color(0xFF6C63FF));
+              await BondPdfService.generateAndShareBond(c);
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             onPressed: _editCustomer,
@@ -1141,7 +1151,6 @@ class _AddLoanScreenState extends State<AddLoanScreen> {
   String _freq     = 'Daily';
   String _loanDate = DateTime.now().toIso8601String().substring(0, 10);
 
-  // 👈 FIX: Smart calculation for completed installments
   String _clearedUptoDate = '';
   bool _isExisting = false;
   bool _saving     = false;
@@ -1175,7 +1184,6 @@ class _AddLoanScreenState extends State<AddLoanScreen> {
       return;
     }
 
-    // 👈 FIX: Automatic calculation of completed installments
     int completed = 0;
     if (_isExisting && _clearedUptoDate.isNotEmpty && _loanDate.isNotEmpty) {
       try {
@@ -1474,7 +1482,7 @@ class _AddLoanScreenState extends State<AddLoanScreen> {
                                             fontSize: 12),
                                       ),
                                       Text(
-                                        'Outstanding: ₹${_fmtN(l.outstandingBalance)}  •  Since ${l.loanDate}',
+                                        'Outstanding: ₹${_fmtN(l.outstandingBalance)} Since ${l.loanDate}',
                                         style: const TextStyle(
                                             color: Color(0xFF3D4F6B),
                                             fontSize: 10),
@@ -1515,7 +1523,6 @@ class _AddLoanScreenState extends State<AddLoanScreen> {
 
               if (_isExisting) ...[
                 const _Sec('Migration Details'),
-                // 👈 FIX: Smart Cleared Upto Date picker replaces manual number entry
                 _DateF('Cleared Upto Date', _clearedUptoDate, (d) {
                   setState(() => _clearedUptoDate = d);
                   _recalc();
@@ -1619,7 +1626,7 @@ class _LoanPreview extends StatelessWidget {
                 Expanded(child: _PK('Completed',
                     '${loan.completedAtMigration} installments')),
                 Expanded(child: _PK('Remaining',
-                    '${loan.remainingCycles} installments')),
+                    '${(loan.totalCycles - loan.completedCycles).clamp(0, loan.totalCycles)} installments')),
               ]),
               const SizedBox(height: 8),
               _PK('Outstanding Balance', '₹${_fmtN(loan.outstandingBalance)}'),
@@ -2068,7 +2075,7 @@ class _LoanDetailScreenState extends State<LoanDetailScreen>
                                   fontSize: 15),
                               overflow: TextOverflow.ellipsis),
                           Text(
-                              'Installment #${inst.installmentNumber}  •  Due ${inst.dueDate}',
+                              'Installment #${inst.installmentNumber} Due ${inst.dueDate}',
                               style: const TextStyle(
                                   color: Color(0xFF7B8FAD), fontSize: 12)),
                         ]),
