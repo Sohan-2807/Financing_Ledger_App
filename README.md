@@ -1,6 +1,6 @@
 # 🏦 Finance Pro
 
-> A production-ready, offline-first mobile app for micro-lenders and collection agents to digitize daily operations, manage loans, enforce legal agreements, and eliminate paper ledgers.
+> A production-ready, offline-first mobile app for lenders and collection agents to digitize daily operations, manage loans, enforce legal agreements, and eliminate paper ledgers.
 
 ![Flutter](https://img.shields.io/badge/Flutter-%3E%3D3.0.0-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-%3E%3D3.0.0-0175C2?logo=dart&logoColor=white)
